@@ -59,8 +59,8 @@ function Candidate({ platform, cand, runId, onRefine, toast, decided, setDecided
     <div class="head"><span class="tag blue">${PLAT[platform]} · ${cand.template}</span>${cand.register ? html`<span class="tag">${{ casual: '日常营业', launch: '正式发布', notice: '声明' }[cand.register] || cand.register}</span>` : null}<span class="sp"></span><span class="small">${cand.chars} 字符</span></div>
     ${cand.angle ? html`<div class="angle">${cand.angle}</div>` : null}
     <textarea value=${text} onInput=${e => setText(e.target.value)} style=${{ minHeight: Math.min(420, 60 + text.split('\n').length * 22) + 'px' }}></textarea>
-    ${platform === 'xhs' && cand.image_plan?.length ? html`<div class="small">配图：${Array.isArray(cand.image_plan) ? cand.image_plan.join('；') : cand.image_plan}</div>` : null}
-    ${platform === 'x' && cand.image_plan ? html`<div class="small">配图：${cand.image_plan}</div>` : null}
+    ${platform === 'xhs' && cand.image_plan?.length ? html`<div class="small">配图：${(Array.isArray(cand.image_plan) ? cand.image_plan.join('；') : cand.image_plan).replace(/^配图[：:]\s*/, '')}</div>` : null}
+    ${platform === 'x' && cand.image_plan ? html`<div class="small">配图：${String(cand.image_plan).replace(/^配图[：:]\s*/, '')}</div>` : null}
     <${Checklist} lint=${cand.lint} />
     ${asking ? html`<div><textarea placeholder="怎么改？例如：压缩一半，结尾再软一点" value=${instr} onInput=${e => setInstr(e.target.value)} style="min-height:56px"></textarea>
       <div class="actions"><button class="btn dark" disabled=${!instr.trim()} onClick=${() => { onRefine(platform, cand.id, instr); setAsking(false); setInstr(''); }}>生成修改版</button><button class="btn ghost" onClick=${() => setAsking(false)}>取消</button></div></div>` : null}
