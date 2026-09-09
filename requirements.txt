@@ -1,0 +1,1 @@
+# stdlib only; file exists so Nixpacks detects Python

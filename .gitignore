@@ -7,3 +7,6 @@ copilot/data/*.log
 copilot/data/last_model_raw.txt
 copilot/data/eval_comments_report.json
 .DS_Store
+# raw exports with user names stay local
+评论数据*.csv
+attic/
