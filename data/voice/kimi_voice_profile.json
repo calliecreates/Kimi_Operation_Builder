@@ -1,0 +1,380 @@
+{
+ "source": {
+  "handle": "Kimi_Moonshot",
+  "collected_at": "2026-09-09T19:12:13.737154+00:00",
+  "count": 100
+ },
+ "model": "kimi-k3",
+ "usage": {
+  "prompt_tokens": 15671,
+  "completion_tokens": 4027,
+  "total_tokens": 19698,
+  "completion_tokens_details": {
+   "reasoning_tokens": 9
+  }
+ },
+ "profile": {
+  "brand_role": "Kimi is Moonshot AI's open frontier model family and agent product line, built for developers, coding agents, and knowledge workers who want open-source SOTA performance without closed-model pricing.",
+  "personality": [
+   {
+    "trait": "Builder's humility — proud but grounded",
+    "evidence_ids": [
+     "2048693682329776223",
+     "2019295025746870389",
+     "2077821890207547467"
+    ],
+    "note": "Wins are celebrated with 'we'll keep our heads down and keep shipping' rather than hype superlatives; thanks the community constantly."
+   },
+   {
+    "trait": "Playful, meme-literate",
+    "evidence_ids": [
+     "2077834926658068983",
+     "2025539982195335198",
+     "2039731620438241403",
+     "2028368415224955015"
+    ],
+    "note": "Single-emoji quote tweets (🤯, 🌘, 👀), jokes about 'hardwired into his prefrontal cortex', slippers for new hires."
+   },
+   {
+    "trait": "Technically dense but scannable",
+    "evidence_ids": [
+     "2046249571882500354",
+     "2033378587878072424",
+     "2045461663898599472"
+    ],
+    "note": "Packs benchmark names, speedups, and architecture terms into bulleted highlights with exact numbers."
+   },
+   {
+    "trait": "Warm and community-first",
+    "evidence_ids": [
+     "2078855608565207130",
+     "2016065333694771276",
+     "2018977959894491452"
+    ],
+    "note": "Apologizes transparently during capacity issues, humanizes the founder, says 'Happy coding!' to students."
+   },
+   {
+    "trait": "Open-source missionary",
+    "evidence_ids": [
+     "2066467110960959833",
+     "2081760186235289764",
+     "2035074972943831491"
+    ],
+    "note": "Recurring framing: 'open intelligence should be instant, affordable, and borderless'; celebrates third parties building on its weights (Cursor)."
+   },
+   {
+    "trait": "Shipping-obsessed",
+    "evidence_ids": [
+     "2031303324746789344",
+     "2027294554387575126",
+     "2048693682329776223"
+    ],
+    "note": "'Keep building, keep shipping', 'Happy Shipping' used as sign-offs."
+   }
+  ],
+  "tone_scale": {
+   "formal_casual": 4,
+   "humble_bold": 6,
+   "technical_plain": 7,
+   "warm_neutral": 7,
+   "rationale": "Casual emoji and jokes sit next to rigorous benchmark claims; bold on open-source SOTA but always softened with thanks and 'keep shipping'; deeply technical vocabulary (MoE, KV cache, prefill/decode) presented in plain, short sentences; consistently warm toward developers, partners, and students."
+  },
+  "structure_templates": [
+   {
+    "type": "launch",
+    "skeleton": "Introducing/Meet {Product}: {one-line category claim}\n\n🔹 {headline spec}\n🔹 {benchmark or architecture win}\n🔹 {differentiating capability}\n-\n{Product} is now live on {surfaces}.\n\n🔗 API: {link}\n🔗 Tech blog: {link}\n🔗 Weights & code: {link}",
+    "typical_length_chars": [
+     300,
+     900
+    ],
+    "opening_patterns": [
+     "Introducing {Product}:",
+     "Meet {Product}",
+     "{Product} is now live"
+    ],
+    "closing_patterns": [
+     "🔗 API / 🔗 Tech blog / 🔗 Weights & code link block",
+     "availability statement"
+    ],
+    "evidence_ids": [
+     "2077830229968683203",
+     "2046249571882500354",
+     "2016024049869324599",
+     "2063990409903112344",
+     "2065377579130142937"
+    ]
+   },
+   {
+    "type": "partner",
+    "skeleton": "{Product} is now live on @{partner}!\n\nExcited/Happy to have {Partner} as our Day 0 launch partner, {one-line on what they enable}. https://{link}",
+    "typical_length_chars": [
+     80,
+     400
+    ],
+    "opening_patterns": [
+     "Kimi {X} is now live on @...",
+     "Kimi {X} is now available on @..."
+    ],
+    "closing_patterns": [
+     "A huge thank-you to the {Partner} team",
+     "Try it out at: {link}"
+    ],
+    "evidence_ids": [
+     "2081804933188501886",
+     "2081771462676123810",
+     "2081767950588223507",
+     "2046451397827477761",
+     "2046272319191150749"
+    ]
+   },
+   {
+    "type": "leaderboard",
+    "skeleton": "Kimi {X} is now #1 on {leaderboard} 🏆\n\n{A huge thank you to every developer building with Kimi. We'll keep our heads down and keep shipping.}",
+    "typical_length_chars": [
+     30,
+     250
+    ],
+    "opening_patterns": [
+     "{Product} is now #1 on ...",
+     "We're the top open-weights model on ...",
+     "{Product} ranks Top N ..."
+    ],
+    "closing_patterns": [
+     "thank-you + 'keep shipping'",
+     "🏆"
+    ],
+    "evidence_ids": [
+     "2048693682329776223",
+     "2019295025746870389",
+     "2018941851445997897",
+     "2054803169994272819",
+     "2017292360099762378"
+    ]
+   },
+   {
+    "type": "open-source",
+    "skeleton": "We've open-sourced {Tool}, our {one-line description}.\n\n{What it does + one concrete perf number.}\n\nExplore on GitHub:\nhttps://{link}",
+    "typical_length_chars": [
+     200,
+     450
+    ],
+    "opening_patterns": [
+     "We've open-sourced {Tool}..."
+    ],
+    "closing_patterns": [
+     "Explore on GitHub: {link}"
+    ],
+    "evidence_ids": [
+     "2081763086281973847",
+     "2081762978391843020",
+     "2081762799202746420",
+     "2046607915424034839"
+    ]
+   },
+   {
+    "type": "product/tutorial",
+    "skeleton": "{Feature} with {Product} - Tutorial #{n}\n\nUse {Product} for {audience} tasks:\n- {task 1}\n- {task 2}\n- {task 3}\n\nStay tuned / Let us know what you'd like to see next!",
+    "typical_length_chars": [
+     150,
+     450
+    ],
+    "opening_patterns": [
+     "{Feature} is now live in {Product}.",
+     "{Product} for {Persona} - Tutorial #n"
+    ],
+    "closing_patterns": [
+     "Stay tuned for more workflows!",
+     "Let us know what you'd like to see next in the comments!"
+    ],
+    "evidence_ids": [
+     "2089979521412034787",
+     "2084245860339298423",
+     "2097636366544937067",
+     "2067574786965061677"
+    ]
+   },
+   {
+    "type": "community",
+    "skeleton": "{Moonshot metaphor}. Join {Program}.\n\n{Why it matters.}\n\nWe hope that you:\n\n🌙 {criterion}\n🌙 {criterion}\n\nApply here: {link}",
+    "typical_length_chars": [
+     300,
+     900
+    ],
+    "opening_patterns": [
+     "It takes a crew to land a moonshot.",
+     "Supporting @{university}..."
+    ],
+    "closing_patterns": [
+     "Apply here:",
+     "Happy coding! ✨"
+    ],
+    "evidence_ids": [
+     "2082118893741490284",
+     "2026920450186711232",
+     "2018977959894491452"
+    ]
+   },
+   {
+    "type": "promo",
+    "skeleton": "🎁 {Limited-time reward headline}\n\n🔹20% bonus for $100–$299\n🔹25% bonus for $300–$999\n🔹30% bonus for $1,000+\n\nEnds {date}.\n\n🔗Details: {link}",
+    "typical_length_chars": [
+     150,
+     400
+    ],
+    "opening_patterns": [
+     "🎁 Here's a new limited-time top-up reward.",
+     "Extra API quota ... 🎉"
+    ],
+    "closing_patterns": [
+     "Ends {date}.",
+     "🔗Details: {link}"
+    ],
+    "evidence_ids": [
+     "2048645054571688123",
+     "2028394635148906549",
+     "2019019291287486494",
+     "2065650860861043064"
+    ]
+   },
+   {
+    "type": "reaction",
+    "skeleton": "{single emoji or one short line}",
+    "typical_length_chars": [
+     1,
+     60
+    ],
+    "opening_patterns": [
+     "🤯",
+     "🌘",
+     "👀",
+     "🤗"
+    ],
+    "closing_patterns": [
+     "n/a"
+    ],
+    "evidence_ids": [
+     "2077834926658068983",
+     "2018843599560151514",
+     "2017852449923702825",
+     "2032311970704277737",
+     "2017027542914580522"
+    ]
+   }
+  ],
+  "lexicon": {
+   "signature_words": [
+    "open-source SOTA",
+    "open frontier intelligence",
+    "Day 0 launch partner",
+    "agent swarm",
+    "long-horizon",
+    "agentic",
+    "keep shipping",
+    "open weights",
+    "Meet",
+    "Introducing",
+    "now live",
+    "Quick hits"
+   ],
+   "product_naming_rules": [
+    "Kimi K3 / Kimi K2.6 / Kimi K2.5 (versioned, capital K, no space-hyphen in official posts)",
+    "Kimi Work",
+    "Kimi Code",
+    "Kimi Web Bridge",
+    "Kimi Slides",
+    "Kimi Agent",
+    "Kimi Agent Swarm",
+    "Kimi Delta Attention",
+    "Attention Residuals (with mathematical italic styling in titles)",
+    "Kimi API",
+    "Kimi Membership / Kimi Code Membership",
+    "Kimi Business Membership",
+    "Moonshot AI / Moonshot for the company"
+   ],
+   "avoid": [
+    "hashtag spam (only event tags like #NVIDIAGTC)",
+    "exaggerated superlatives without numbers ('revolutionary', 'game-changing')",
+    "direct competitor bashing",
+    "long unbroken paragraphs in launch posts",
+    "corporate jargon like 'synergy', 'leverage' as verb",
+    "first-person singular"
+   ],
+   "numbers_style": "Exact and dense: '2.8T MoE', '1M-token context', '300 parallel sub-agents × 4,000 steps', '1.72×–2.22× prefill speedup', '+21.8% on Kimi Code Bench v2', '$0.16 / M tokens', '60-100 tok/s'. Benchmarks always named with scores in parentheses: 'SWE-bench Verified (76.8%)'."
+  },
+  "formatting": {
+   "bullets": "Heavy use of 🔹 as the primary bullet; '-' hyphens in tutorials; '✅' for validated metrics; '>' used as sub-bullets for pricing/details.",
+   "emoji": "Strategic, not decorative: 🔹 bullets, 🔗 for links, 🏆 for #1 rankings, 🎁/🎉 for promos, 🌘/🌙/🌖 moon imagery, 🤯/👀/🤗 as standalone reactions, ⚡️ for speed.",
+   "links": "Nearly every substantive post ends with t.co links, often prefixed by '🔗' and labeled (API, Tech blog, Weights & code, GitHub, Details).",
+   "line_breaks": "Generous: one idea per line, blank lines between sections, '-' used as a section divider in big launches.",
+   "hashtags": "Rare; only event hashtags (#NVIDIAGTC).",
+   "mentions": "Frequent @-mentions of partners (Fireworks, Baseten, Nebius, Modal, Databricks) and of @Kimi_Moonshot within quote tweets."
+  },
+  "claims_style": "Claims are always anchored to named benchmarks and exact scores: 'Open-source SOTA on HLE w/ tools (54.0), SWE-Bench Pro (58.6)...' (2046249571882500354). Comparisons are scoped and hedged to 'open-source SOTA' or '#1 open model' rather than absolute #1, except on usage leaderboards (OpenRouter) where '#1 used model' is claimed with 'Real usage data doesn't lie. Developers are voting with their tokens.' (2018941851445997897). Competitor comparisons are rare and factual, e.g. 'only 20% the cost of Claude 4.5 Sonnet' (2016114773407236471). Speedups cite hardware and baseline: '1.72×–2.22× prefill speedup over the flash-linear-attention baseline on H20' (2081762799202746420).",
+  "audience_address": "Primarily developers and agent builders ('developers can start building', 'go build something amazing'), secondarily knowledge workers for Kimi Work tutorials (financial analysts, slide builders). Uses 'we/our' for Moonshot, 'you' for users, and never corporate third-person. Partners addressed warmly by name with public thanks.",
+  "cta_patterns": [
+   "Try it now / Try it at: {link}",
+   "Explore on GitHub: {link}",
+   "Apply here: {link}",
+   "Go build something amazing.",
+   "Let us know what you'd like to see next in the comments!",
+   "Stay tuned for more workflows!",
+   "Jump in now and build something amazing!",
+   "Happy coding! ✨"
+  ],
+  "recurring_motifs": [
+   "moon/moonshot imagery (🌘🌙🌖, 'It takes a crew to land a moonshot', Dark Side of the Moon doodle)",
+   "open intelligence / open-source ecosystem ('open intelligence should be instant, affordable, and borderless')",
+   "shipping ('keep building, keep shipping', 'Happy Shipping')",
+   "gratitude to community and partners ('a huge thank you to every developer')",
+   "speed + cost as a paired value ('High performance and low cost are all you need')",
+   "agents and swarms as the product identity"
+  ],
+  "right_wrong_examples": [
+   {
+    "context": "Model launch",
+    "right": "Introducing Kimi K3.5: Open Frontier Intelligence\n\n🔹 3.2T parameters, 1M context, native multimodal\n🔹 Open-source SOTA on SWE-bench Verified (81.2%)\n🔹 Built for long-horizon agentic coding\n\nLive today on kimi.com and the Kimi API. Weights by Friday.\n\n🔗 API: ...",
+    "wrong": "We are thrilled to announce our revolutionary new model that will change AI forever!!! Stay tuned for more details soon. #AI #LLM #AGI",
+    "why": "Real launches lead with specs and named benchmarks, no hype adjectives, no hashtag spam, always availability + link block."
+   },
+   {
+    "context": "Leaderboard win",
+    "right": "Kimi K3 is now #1 on OpenRouter's weekly leaderboard 🏆\n\nA huge thank you to every developer building with Kimi. We'll keep our heads down and keep shipping.",
+    "wrong": "NUMBER ONE BABY!! 🚀🚀🚀 We crushed the competition. Nobody comes close to us.",
+    "why": "Wins are celebrated humbly with thanks, not competitor-bashing or chest-beating."
+   },
+   {
+    "context": "Partner announcement",
+    "right": "Kimi K3 is now live on @provider!\n\nHappy to have them as a Day 0 launch partner, bringing fast, reliable K3 access to more developers.\n\nA huge thank-you to the team for making this possible!",
+    "wrong": "Exciting strategic partnership announcement! We've teamed up with Provider to synergize distribution of our cutting-edge model.",
+    "why": "Partner posts are short, quote-tweet format, partner-crediting, with 'Day 0 launch partner' vocabulary — never corporate-speak."
+   },
+   {
+    "context": "Open-sourcing a tool",
+    "right": "We've open-sourced MoonKV, our KV-cache transfer library for cross-datacenter inference.\n\nIt cuts cross-DC transfer overhead by 3.4× on H20 clusters, making PD-disaggregation practical at scale.\n\nExplore on GitHub: {link}",
+    "wrong": "Check out our amazing new GitHub repo! Star it if you love open source! 🌟",
+    "why": "Open-source posts are factual, name the baseline and speedup, and close with 'Explore on GitHub:'."
+   },
+   {
+    "context": "Capacity incident",
+    "right": "Kimi K3 demand pushed past our current capacity over the past 48 hours. To protect existing subscribers, we're temporarily pausing new signups. We're adding capacity as fast as we can. Thank you for your patience!",
+    "wrong": "Due to unforeseen circumstances, certain service interruptions may occur. We apologize for any inconvenience.",
+    "why": "The account is transparent, specific, and human during incidents — never vague corporate boilerplate."
+   }
+  ],
+  "reviewer_checklist": [
+   "Does the post open with 'Introducing' / 'Meet' / 'X is now live' rather than a marketing hook?",
+   "Are capability claims tied to named benchmarks with exact scores or multipliers?",
+   "Is the strongest claim scoped as 'open-source SOTA' / '#1 open model' rather than unqualified 'best'?",
+   "Are specs written in the house style (2.8T, 1M-token context, tok/s, $X.XX / M tokens)?",
+   "Does the post use 🔹 bullets (not generic •) for highlights?",
+   "Does it end with the labeled 🔗 link block (API / Tech blog / Weights & code)?",
+   "Is availability stated plainly ('now live on ...') with a concrete date if weights are pending?",
+   "Is there a thank-you to developers, partners, or community where appropriate?",
+   "Is emoji use functional (🔹🔗🏆🌘) and limited — no decorative emoji strings?",
+   "Are hashtags absent (except event tags like #NVIDIAGTC)?",
+   "Does the post use 'we/our' for Moonshot and 'you' for the reader, with no first-person singular?",
+   "Is the tone warm but free of hype words like 'revolutionary', 'game-changing', or competitor-bashing?"
+  ],
+  "confidence_notes": "Sample is English-only, so the Chinese-language voice (a major market for Moonshot) is unobservable. Reply/DM tone, crisis communications beyond one capacity incident, and long-form blog voice are out of scope. Quoted tweet texts are third-party content and were not used as voice evidence. Post-type labels were inferred from text. Dates appear to be from a future-dated scrape (2026); treat metrics as relative signals only."
+ }
+}

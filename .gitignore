@@ -1,0 +1,9 @@
+.env
+__pycache__/
+*.pyc
+data/state.json
+copilot/data/*.jsonl
+copilot/data/*.log
+copilot/data/last_model_raw.txt
+copilot/data/eval_comments_report.json
+.DS_Store
