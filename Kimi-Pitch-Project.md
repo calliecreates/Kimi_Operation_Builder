@@ -34,14 +34,15 @@ All functionality is real: Kimi API, TwitterAPI.io, outbound webhooks. No replay
 
 **3b. Review state** — adopt / edit / skip / escalate with edit distance. Track adoption and edit rate.
 
-**4. Outbound** — Feishu custom-bot webhook, Slack incoming webhook. Push on approve.
+**4. Chat UI** ✅ 2026-09-11 — `copilot/static/`, Preact + htm from CDN, no build. Chinese. Main tab is the chat: 写 Caption / 处理评论; candidate cards with checklist badges, type chips, refine, adopt / edit / skip; comment cards grouped by action with folded no-reply and archive lists. Records tab: adoption rate, edit ratio, recent runs, voice hashes. 语气手册 tab: the four guides read-only.
 
-**5. Automation policy page** — autonomy level and reason for each of the three scenarios. Criteria: reversible? internal or external? cost of error vs cost of delay? can the model self-verify?
+**5. Automation policy** — now expressed in code and docs rather than a page: COMMENT_POLICY.md decision table, lint in code, human decisions recorded. A one-screen policy page is optional.
 
-**6. Deploy to Railway** — PORT, 0.0.0.0, host check, access code, volume.
+**6. Deploy** ⏳ 2026-09-11 — GitHub `calliecreates/Kimi_Operation_Builder` → Railway project `kimi-content-copilot`, service `copilot`, volume `/data`, domain https://copilot-production-ada7.up.railway.app. No access code by owner's decision; per-IP rate limit (12/min, 150/day) instead. Nixpacks needs `requirements.txt` to detect Python.
 
 ## Log
 
+- 09-11 Server + chat UI built and tested locally end to end (caption run, adopt, comments run). Pushed to GitHub; Railway project created; first two builds failed on Python detection, fixed with requirements.txt.
 - 09-11 Comment replay on 231 real comments: precision 0.39 / recall 0.47 vs Kimi's own reply choices; 13 categories covered every comment; biggest lever is a product FAQ as extra FACTS (see COMMENT_POLICY.md Evaluation).
 - 09-10 Step 2 backend: first real run 60 s end to end (brief 28 s, X 19 s, XHS 32 s in parallel); zero lint failures, placeholders used instead of invented links. Fixed: X prompt must say English; blank-line instruction caused malformed JSON. PRD's 30 s target needs a faster model for brief extraction or skipping it when the operator gives structured facts.
 - 09-10 Step 1 done for X and Xiaohongshu. Both guides have a three-register (XHS) or type-based structure, verbatim few-shot examples, and a model cross-check. `model_json` gained `timeout` and `max_tokens` params; failed parses keep the raw reply in `data/last_model_raw.txt`. Next: Step 2, backend first (generator + review + webhook), then frontend.
