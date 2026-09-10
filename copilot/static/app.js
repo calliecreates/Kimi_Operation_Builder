@@ -218,7 +218,9 @@ function App() {
   const refreshState = () => api('/api/state').then(setState).catch(() => {});
   useEffect(() => { refreshState(); api('/api/posts').then(r => setPosts(r.posts)).catch(() => setPosts([])); }, []);
   useEffect(() => { $store.set('cc.page', page); }, [page]);
-  useEffect(() => { $store.set('cc.msgs2', { caption: msgs.caption.slice(-20), comments: msgs.comments.slice(-20) }); const el = streamRef.current; if (el) el.scrollTop = el.scrollHeight; }, [msgs]);
+  const scrollToEnd = () => { const el = streamRef.current; if (!el) return; requestAnimationFrame(() => el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })); };
+  useEffect(() => { $store.set('cc.msgs2', { caption: msgs.caption.slice(-20), comments: msgs.comments.slice(-20) }); const last = (msgs[page] || []).slice(-1)[0]; if (!last || last.role === 'user' || last.status === 'running' || last.kind === 'chooser') scrollToEnd(); }, [msgs]);
+  useEffect(() => { scrollToEnd(); }, [page]);
   useEffect(() => { $store.set('cc.decided', decided); }, [decided]);
   const list = msgs[page] || [];
   const push = (pg, m) => setMsgs(ms => ({ ...ms, [pg]: [...ms[pg], { id: uid(), ...m }] }));
