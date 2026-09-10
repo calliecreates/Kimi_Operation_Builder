@@ -6,8 +6,6 @@ How 「Kimi智能助手」 writes on Xiaohongshu. Derived from 100 notes (Feb–
 
 **Kimi 是住在你电脑里的蓝团子，把最强的开源模型变成你会用的东西。**
 
-Same company, different room. On X Kimi talks to builders; here it talks to Chinese users who want to get work done and have fun doing it: 打工人、学生、开发者、养虾人.
-
 ## Three registers
 
 Pick the register first. Everything else follows from it.
@@ -240,11 +238,3 @@ Kimi 团队
 2026年7月19日
 #kimi[话题]#
 ```
-
-## Cross-check with the model profile
-
-`data/voice/xhs_voice_profile.json` is Kimi K3's independent read of the same 100 notes (one call, 39k tokens). It agrees on the register split, 本K, stickers, tutorial-first, third-party boards with candor, `#kimi[话题]#` first, and exact Chinese units. Two rules above came from it: the 中英文 spacing rule and the 主播腔 ban. One disagreement: it reads titles as "almost never a question"; 8 of 100 titles are questions, so questions stay allowed but rare.
-
-## Not covered by the sample
-
-Comment-section replies, video scripts, and paid-partnership notes. The X guide (KIMI_VOICE.md) does not apply here beyond product names and number precision.

@@ -95,23 +95,33 @@ function Candidate({ platform, cand, runId, onRefine, toast, decided, setDecided
       <div class="actions"><button class="btn dark" disabled=${!instr.trim()} onClick=${() => { onRefine(platform, cand.id, instr); setAsking(false); setInstr(''); }}>生成修改版</button><button class="btn ghost" onClick=${() => setAsking(false)}>取消</button></div></div>` : null}
     <div class="actions">
       ${state ? html`<span class="tag green">${{ adopt: '已采纳', edit: '已编辑采纳', skip: '已跳过' }[state]}</span>` : html`
-        <button class="btn dark" onClick=${() => decide(edited ? 'edit' : 'adopt')}>${edited ? '编辑后采纳' : '采纳并复制'}</button>
+        <button class="btn dark" onClick=${() => decide(edited ? 'edit' : 'adopt')}>采纳</button>
         <button class="btn" onClick=${() => setAsking(true)}>以此为基础改</button>
         <button class="btn ghost" onClick=${() => decide('skip')}>跳过</button>`}
       <button class="btn ghost" onClick=${() => copyText(final, toast)}>复制</button>
     </div></div>`;
 }
-function CaptionResult({ msg, types, onRefine, onRetype, toast, decided, setDecided }) {
+function TypePicker({ msg, types, onGenerate, busy }) {
+  const [sel, setSel] = useState(() => Object.fromEntries(msg.platforms.map(p => [p, msg.suggestions[p]?.type])));
+  const used = msg.generated || 0;
+  return html`<div class="picker">
+    <div class="bubble">${used ? '换个类型再生成，或者保持现在的类型重新生成。' : '第二步：确认每个平台的类型。类型决定模板和语气，选错类型是最大的返工来源。'}</div>
+    <div class="card picker-card">
+      ${msg.platforms.map(p => html`<div class="pick-row"><span class="tag blue">${PLAT[p]}</span>
+        <div class="chips">${(types?.[p] || msg.suggestions[p].options).map(o => html`<button class=${'chip' + (o.type === sel[p] ? ' on' : '')} onClick=${() => setSel({ ...sel, [p]: o.type })}>${o.label}</button>`)}</div>
+        <span class="small">${msg.suggestions[p]?.type === sel[p] ? '建议：' : '建议是「' + (types?.[p] || msg.suggestions[p].options).find(o => o.type === msg.suggestions[p]?.type)?.label + '」，'}${msg.suggestions[p]?.reason || ''}</span></div>`)}
+      <div class="actions"><button class="btn dark" disabled=${busy} onClick=${() => onGenerate(sel)}>${used ? '按所选类型再生成' : '开始生成'}</button></div>
+    </div></div>`;
+}
+function CaptionResult({ msg, types, onRefine, onChangeType, toast, decided, setDecided }) {
   const run = msg.run; const plats = Object.keys(run.results);
   const [tab, setTab] = useState(plats[0]);
-  const r = run.results[tab]; const sug = run.suggestions[tab];
+  const r = run.results[tab];
+  const label = (types?.[tab] || run.suggestions[tab]?.options || []).find(o => o.type === r.type)?.label || r.type;
   const refines = (msg.refines || []).filter(x => x.platform === tab);
   return html`<div>
-    <${Brief} brief=${run.brief} />
     ${plats.length > 1 ? html`<div class="tabs inline">${plats.map(p => html`<span class=${'tab' + (p === tab ? ' on' : '')} onClick=${() => setTab(p)}>${PLAT[p]} <span class="n">${run.results[p].candidates.length}</span></span>`)}</div>` : null}
-    <div class="typebar"><span class="small">类型</span>
-      <div class="chips">${(types?.[tab] || sug.options).map(o => html`<button class=${'chip' + (o.type === r.type ? ' on' : '')} title=${o.type === r.type ? '' : '按这个类型重新生成'} onClick=${() => o.type !== r.type && onRetype(tab, o.type)}>${o.label}</button>`)}</div>
-      <span class="small">${sug.reason}</span><span class="sp"></span><button class="btn ghost" onClick=${() => onRetype(tab, r.type)}>重新生成</button></div>
+    <div class="typebar"><span class="small">类型</span><span class="tag">${label}</span><span class="sp"></span><button class="btn ghost" onClick=${onChangeType}>换个类型 / 重新生成</button></div>
     <div class="grid">${r.candidates.map(c => html`<${Candidate} key=${c.id} platform=${tab} cand=${c} runId=${run.id} onRefine=${onRefine} toast=${toast} decided=${decided} setDecided=${setDecided} />`)}
       ${refines.map(x => x.candidates.map(c => html`<${Candidate} key=${c.id} platform=${tab} cand=${{ ...c, template: '修改版 · ' + c.template }} runId=${run.id} onRefine=${onRefine} toast=${toast} decided=${decided} setDecided=${setDecided} />`))}
     </div></div>`;
@@ -120,15 +130,15 @@ function CaptionResult({ msg, types, onRefine, onRetype, toast, decided, setDeci
 /* ---------- comments: guided flow ---------- */
 const ACT = { draft: ['起草', 'blue'], route: ['转客服', 'blue'], apply: ['套用相似', 'blue'], optional: ['可回', 'amber'], look: ['人工看', 'amber'], none: ['不回', ''], archive: ['归档', ''] };
 const FLAG = f => f.replace('risk-words:', '风险词：').replace('human-look', '人工看').replace('not-answerable', '简介答不了').replace('model-declined', '模型退回');
-const DEC = { adopt: '已确认', edit: '已编辑确认', skip: '已跳过', escalate: '已升级' };
-function PostChooser({ posts, onPick, onPaste }) {
+const DEC = { adopt: '已发送', edit: '已发送', skip: '已跳过', escalate: '已升级' };
+function PostChooser({ posts, onPick, onPaste, selected, busy }) {
   const [open, setOpen] = useState(false); const [text, setText] = useState(''); const [facts, setFacts] = useState('');
   return html`<div>
     <div class="bubble">第一步：选一个帖子。这是官号最近的四篇真实笔记和评论区。</div>
-    <div class="grid posts">${(posts || []).map(p => html`<div class="card post" onClick=${() => onPick(p)}>
+    <div class="grid posts">${(posts || []).map(p => html`<div class=${'card post' + (selected === p.id ? ' selected' : '')} onClick=${() => !busy && onPick(p)}>
       <div class="title">${p.title}</div>
       <div class="small">${p.date} · ${p.count} 条评论${p.likes != null ? ` · 笔记 ${p.likes} 赞` : ''}</div>
-      <div class="actions"><button class="btn dark">处理这篇的评论</button></div></div>`)}</div>
+      <div class="actions">${selected === p.id ? html`<span class="tag green">已选</span>` : html`<button class="btn dark" disabled=${busy}>处理这篇的评论</button>`}</div></div>`)}</div>
     <details class="fold" open=${open} onToggle=${e => setOpen(e.target.open)}><summary>或者粘贴自己的评论</summary>
       <div class="paste"><textarea placeholder="每行一条评论，格式如：@用户：内容 (赞 12)" value=${text} onInput=${e => setText(e.target.value)} style="min-height:90px"></textarea>
         <textarea placeholder="可选：帖子正文或产品事实。回复只会用这里的信息。" value=${facts} onInput=${e => setFacts(e.target.value)} style="min-height:56px"></textarea>
@@ -140,21 +150,22 @@ function CommentCard({ row, runId, toast, decided, setDecided }) {
   const state = decided[row.id];
   const decide = async (action) => {
     await api('/api/decision', { kind: 'comment', run_id: runId, item_id: row.id, platform: 'xhs', category: row.category, action, original: row.draft?.reply || '', final: text });
-    setDecided({ ...decided, [row.id]: action }); if (action === 'adopt' || action === 'edit') copyText(text, toast); else toast(action === 'escalate' ? '已标记升级' : '已跳过');
+    setDecided({ ...decided, [row.id]: action }); if (action === 'adopt' || action === 'edit') { copyText(text, toast); } else toast(action === 'escalate' ? '已标记升级' : '已跳过');
   };
   const risk = row.category === 'risk';
+  const sent = state === 'adopt' || state === 'edit';
+  const needsHuman = !row.draft && !risk;
   return html`<div class=${'card' + (risk ? ' risk' : '') + (state ? ' decided' : '')}>
     <div class="head"><span class=${'tag ' + (risk ? 'red' : 'blue')}>${row.label}</span><span class=${'tag ' + ACT[row.action][1]}>${ACT[row.action][0]}</span>
       ${(row.flags || []).map(f => html`<span class="tag amber">${FLAG(f)}</span>`)}${row.kimi_replied ? html`<span class="tag green" title="数据里官号确实回复了这条">官号当时回复了</span>` : null}<span class="sp"></span>${row.likes != null ? html`<span class="small">👍 ${row.likes}</span>` : null}</div>
     <div>${row.author ? html`<b>@${row.author}</b>：` : null}${row.text}</div>
     <div class="small">${row.reason}${row.question ? ` · 问题：${row.question}` : ''}</div>
-    ${row.draft ? html`<div class="draft"><div class="small">建议回复</div><textarea value=${text} onInput=${e => setText(e.target.value)} style="min-height:44px"></textarea>
-      <div class="small">${row.draft.applied_from ? '套用自相似评论 · ' : ''}${row.draft.note || ''}${row.draft.lint && !row.draft.lint.pass ? ' · ⚠ 不符合回复规范' : ''}</div></div>` : null}
-    ${risk ? html`<div class="small" style="color:var(--red-ink)">不生成回复。建议升级给负责人。</div>` : null}
-    ${!row.draft && !risk && row.action === 'look' ? html`<div class="small">简介里没有能回答的事实，需要人来写。</div>` : null}
+    ${risk ? html`<div class="small" style="color:var(--red-ink)">不生成回复。建议升级给负责人。</div>` : sent ? html`<div class="draft"><div class="small">已发送的回复</div><div class="sent">${text}</div></div>` : html`<div class="draft"><div class="small">${row.draft ? '建议回复' : '简介里没有能回答的事实，请你来写'}</div>
+      <textarea value=${text} placeholder=${row.draft ? '' : '写一条回复…'} onInput=${e => setText(e.target.value)} style="min-height:44px"></textarea>
+      ${row.draft ? html`<div class="small">${row.draft.applied_from ? '套用自相似评论 · ' : ''}${row.draft.note || ''}${row.draft.lint && !row.draft.lint.pass ? ' · ⚠ 不符合回复规范' : ''}</div>` : null}</div>`}
     <div class="actions">
-      ${state ? html`<span class="tag green">${DEC[state]}</span>` : html`
-        ${row.draft ? html`<button class="btn dark" title="复制到剪贴板，去小红书粘贴发送" onClick=${() => decide(text !== row.draft.reply ? 'edit' : 'adopt')}>${text !== row.draft.reply ? '编辑后回复' : '确认回复'}</button>` : null}
+      ${state ? html`<span class="tag green">${sent ? '已发送' : DEC[state]}</span>` : html`
+        ${!risk ? html`<button class="btn dark" disabled=${!text.trim()} title="模拟发送：复制到剪贴板，去小红书粘贴" onClick=${() => decide(row.draft && text === row.draft.reply ? 'adopt' : 'edit')}>发送</button>` : null}
         ${risk ? html`<button class="btn danger" onClick=${() => decide('escalate')}>升级给负责人</button>` : null}
         <button class="btn ghost" onClick=${() => decide('skip')}>跳过</button>`}
     </div></div>`;
@@ -173,7 +184,7 @@ function CommentsResult({ run, cats, toast, decided, setDecided, onDone, onAgain
     ${opt.length ? html`<details class="fold"><summary>可回，人工决定 ${opt.length}</summary><div class="grid">${opt.map(r => html`<${CommentCard} key=${r.id} row=${r} runId=${run.id} toast=${toast} decided=${decided} setDecided=${setDecided} />`)}</div></details>` : null}
     ${none.length ? html`<details class="fold"><summary>无需回复 ${none.length}（额度、短评、质疑）</summary><div class="list">${none.map(r => html`<div class="row"><span class="who">${r.label}</span><span>${r.text}</span></div>`)}</div></details>` : null}
     ${arch.length ? html`<details class="fold"><summary>已归档 ${arch.length}${arch.some(r => r.tag) ? `，标签 ${[...new Set(arch.map(r => r.tag).filter(Boolean))].join(' / ')}` : ''}</summary><div class="list">${arch.map(r => html`<div class="row"><span class="who">${r.tag ? '#' + r.tag : r.label}</span><span>${r.text}</span></div>`)}</div></details>` : null}
-    <div class="tally"><span>已确认 ${tally[0][1] + tally[1][1]}</span><span>跳过 ${tally[2][1]}</span><span>升级 ${tally[3][1]}</span><span>待定 ${pending}</span><span class="sp"></span>
+    <div class="tally"><span>已发送 ${tally[0][1] + tally[1][1]}</span><span>跳过 ${tally[2][1]}</span><span>升级 ${tally[3][1]}</span><span>待定 ${pending}</span><span class="sp"></span>
       ${summary ? html`<button class="btn" onClick=${onAgain}>再选一篇</button>` : html`<button class="btn dark" onClick=${onDone}>${pending ? `完成本轮（还有 ${pending} 条待定）` : '完成本轮'}</button>`}</div>
     ${summary ? html`<div class="bubble">${summary}</div>` : null}
   </div>`;
@@ -220,7 +231,7 @@ function App() {
   useEffect(() => { $store.set('cc.page', page); }, [page]);
   const scrollToEnd = () => { const el = streamRef.current; if (!el) return; requestAnimationFrame(() => el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })); };
   useEffect(() => { $store.set('cc.msgs2', { caption: msgs.caption.slice(-20), comments: msgs.comments.slice(-20) }); const last = (msgs[page] || []).slice(-1)[0]; if (!last || last.role === 'user' || last.status === 'running' || last.kind === 'chooser') scrollToEnd(); }, [msgs]);
-  useEffect(() => { scrollToEnd(); }, [page]);
+  useEffect(() => { scrollToEnd(); if (page === 'comments' && !(msgs.comments || []).length) push('comments', { role: 'bot', kind: 'chooser', status: 'done' }); }, [page]);
   useEffect(() => { $store.set('cc.decided', decided); }, [decided]);
   const list = msgs[page] || [];
   const push = (pg, m) => setMsgs(ms => ({ ...ms, [pg]: [...ms[pg], { id: uid(), ...m }] }));
@@ -246,12 +257,15 @@ function App() {
     const id = uid();
     if (page === 'caption') {
       push('caption', { role: 'user', text });
-      setMsgs(ms => ({ ...ms, caption: [...ms.caption, { id, role: 'bot', kind: 'caption', status: 'running', material: text, platforms, refines: [] }] }));
-      runJob('caption', { path: '/api/caption/run', body: { material: text, platforms, n: 2 } }, id);
+      setMsgs(ms => ({ ...ms, caption: [...ms.caption, { id, role: 'bot', kind: 'brief', status: 'running', material: text, platforms }] }));
+      runJob('caption', { path: '/api/caption/brief', body: { material: text, platforms } }, id).then(res => {
+        if (res) patch('caption', id, m => ({ ...m, brief: res.brief, suggestions: res.suggestions, generated: 0 }));
+      });
     }
   }
-  function pickPost(p) {
+  function pickPost(p, chooserId) {
     if (busy) return; setBusy(true);
+    if (chooserId) patch('comments', chooserId, x => ({ ...x, selected: p.id }));
     push('comments', { role: 'user', text: `处理「${p.title}」的 ${p.count} 条评论` });
     const id = uid();
     setMsgs(ms => ({ ...ms, comments: [...ms.comments, { id, role: 'bot', kind: 'comments', status: 'running' }] }));
@@ -269,10 +283,11 @@ function App() {
     const rows = m.run.rows.filter(r => ['draft', 'route', 'apply', 'look', 'optional'].includes(r.action));
     const c = a => rows.filter(r => decided[r.id] === a).length;
     const done = c('adopt') + c('edit');
-    const text = `本轮小结：${m.run.summary.total} 条评论，确认回复 ${done} 条（其中编辑后 ${c('edit')} 条），跳过 ${c('skip')} 条，升级 ${c('escalate')} 条，${rows.length - done - c('skip') - c('escalate')} 条未处理。风险类 ${m.run.summary.categories.risk || 0} 条已标出。`;
+    const text = `本轮小结：${m.run.summary.total} 条评论，发送回复 ${done} 条（其中人工编辑或撰写 ${c('edit')} 条），跳过 ${c('skip')} 条，升级 ${c('escalate')} 条，${rows.length - done - c('skip') - c('escalate')} 条未处理。风险类 ${m.run.summary.categories.risk || 0} 条已标出。`;
     patch('comments', mid, x => ({ ...x, summary: text })); refreshState();
   }
   function anotherPost() { push('comments', { role: 'bot', kind: 'chooser', status: 'done' }); }
+  useEffect(() => { if (page === 'comments' && msgs.comments.length === 0) anotherPost(); }, []);
   async function refine(mid, platform, candidateId, instruction) {
     const m = msgs.caption.find(x => x.id === mid); if (!m?.run || busy) return;
     push('caption', { role: 'user', text: `修改 ${PLAT[platform]} 候选：${instruction}` });
@@ -281,13 +296,18 @@ function App() {
     const res = await runJob('caption', { path: '/api/caption/refine', body: { run_id: m.run.id, platform, candidate_id: candidateId, instruction } }, rid);
     if (res) { patch('caption', mid, x => ({ ...x, refines: [...(x.refines || []), res] })); drop('caption', rid); toast('修改版已加到卡片列表末尾'); }
   }
-  function retype(mid, platform, type) {
-    const m = msgs.caption.find(x => x.id === mid); if (!m?.material || busy) return;
-    const label = state?.voice?.[platform]?.types.find(t => t.type === type)?.label || type;
-    push('caption', { role: 'user', text: `按「${label}」重新生成 ${PLAT[platform]}` });
+  function generateFrom(pickerId, sel) {
+    const m = msgs.caption.find(x => x.id === pickerId); if (!m?.brief || busy) return;
+    const labels = m.platforms.map(p => `${PLAT[p]}：${state?.voice?.[p]?.types.find(t => t.type === sel[p])?.label || sel[p]}`).join('，');
+    push('caption', { role: 'user', text: `${m.generated ? '再生成' : '生成'}（${labels}）` });
+    patch('caption', pickerId, x => ({ ...x, generated: (x.generated || 0) + 1 }));
     const id = uid(); setBusy(true);
-    setMsgs(ms => ({ ...ms, caption: [...ms.caption, { id, role: 'bot', kind: 'caption', status: 'running', material: m.material, platforms: [platform], refines: [] }] }));
-    runJob('caption', { path: '/api/caption/run', body: { material: m.material, platforms: [platform], types: { [platform]: type }, n: 2 } }, id);
+    setMsgs(ms => ({ ...ms, caption: [...ms.caption, { id, role: 'bot', kind: 'caption', status: 'running', pickerId, refines: [] }] }));
+    runJob('caption', { path: '/api/caption/generate', body: { brief: m.brief, suggestions: m.suggestions, platforms: m.platforms, types: sel, n: 2 } }, id);
+  }
+  function changeType(pickerId) {
+    const m = msgs.caption.find(x => x.id === pickerId); if (!m) return;
+    push('caption', { role: 'bot', kind: 'picker-again', status: 'done', pickerId });
   }
   const typeOptions = state ? Object.fromEntries(Object.entries(state.voice).map(([p, v]) => [p, v.types])) : null;
   const nav = [['caption', '生成文案'], ['comments', '处理评论'], ['records', '记录'], ['voice', '语气手册']];
@@ -295,22 +315,23 @@ function App() {
   return html`<div class="shell">
     <aside class="rail"><div class="logo">K</div>
       ${nav.map(([k, v], i) => html`<button class=${(k === page ? 'on' : '') + (i < 2 ? ' primary' : '')} onClick=${() => setPage(k)}>${v}</button>`)}
-      <div class="spacer"></div>${isSkill ? html`<button title="清空当前对话" onClick=${() => { if (confirm('清空当前对话？记录不会删除。')) setMsgs(ms => ({ ...ms, [page]: [] })); }}>清空</button>` : null}</aside>
+      <div class="spacer"></div>${isSkill ? html`<button title="清空当前对话" onClick=${() => { if (confirm('清空当前对话？记录不会删除。')) setMsgs(ms => ({ ...ms, [page]: page === 'comments' ? [{ id: uid(), role: 'bot', kind: 'chooser', status: 'done' }] : [] })); }}>清空</button>` : null}</aside>
     <main class="main">
       <div class="top"><h1>${{ caption: '生成文案', comments: '处理评论', records: '记录', voice: '语气手册' }[page]}</h1>
         ${page === 'caption' ? html`<span class="sub">素材 → 简介 → 按 Kimi 语气生成 → checklist</span>` : page === 'comments' ? html`<span class="sub">分类 → 守卫 → 决策表 → 只对要回的起草 · 小红书</span>` : null}
         <span class="meta">${state ? (state.kimi_configured ? `模型 ${state.model}` : 'Kimi API 未配置') : '连接中…'}</span></div>
       ${isSkill ? html`
         <div class="stream" ref=${streamRef}>
-          ${page === 'comments' && !list.length ? html`<${PostChooser} posts=${posts} onPick=${pickPost} onPaste=${pasteComments} />` : null}
           ${page === 'caption' && !list.length ? html`<div class="empty"><div class="bubble">粘贴一段素材：功能是什么、给谁用、有什么数字、什么时候上线、链接。我先提取成事实清单，再按 Kimi 在 X 和小红书的语气各写两版，每一句都能追溯到某条事实。</div>
             <button class="btn" onClick=${() => setInput({ ...input, caption: EXAMPLE_MATERIAL })}>用示例试试</button></div>` : null}
           ${list.map(m => m.role === 'user' ? html`<${UserBubble} key=${m.id} text=${m.text} />` : html`<div class="msg-bot" key=${m.id}>
-            ${m.status === 'running' ? html`<${Stages} stages=${m.stages} fallback=${m.kind === 'comments' ? '排队中…' : m.kind === 'refine' ? '生成修改版…' : '排队中…'} />` : null}
+            ${m.status === 'running' ? html`<${Stages} stages=${m.stages} fallback=${m.kind === 'refine' ? '生成修改版…' : m.kind === 'brief' ? '提取简介…' : '排队中…'} />` : null}
             ${m.status === 'error' ? html`<div class="bubble err">${m.error}</div>` : null}
-            ${m.status === 'done' && m.kind === 'caption' ? html`<${CaptionResult} msg=${m} types=${typeOptions} onRefine=${(p, c, i) => refine(m.id, p, c, i)} onRetype=${(p, t) => retype(m.id, p, t)} toast=${toast} decided=${decided} setDecided=${setDecided} />` : null}
+            ${m.status === 'done' && m.kind === 'brief' && m.brief ? html`<${Brief} brief=${m.brief} /><${TypePicker} msg=${m} types=${typeOptions} busy=${busy} onGenerate=${sel => generateFrom(m.id, sel)} />` : null}
+            ${m.kind === 'picker-again' ? (() => { const pm = msgs.caption.find(x => x.id === m.pickerId); return pm?.brief ? html`<${TypePicker} msg=${pm} types=${typeOptions} busy=${busy} onGenerate=${sel => generateFrom(pm.id, sel)} />` : null; })() : null}
+            ${m.status === 'done' && m.kind === 'caption' ? html`<${CaptionResult} msg=${m} types=${typeOptions} onRefine=${(p, c, i) => refine(m.id, p, c, i)} onChangeType=${() => changeType(m.pickerId)} toast=${toast} decided=${decided} setDecided=${setDecided} />` : null}
             ${m.status === 'done' && m.kind === 'comments' ? html`<${CommentsResult} run=${m.run} cats=${state?.categories || {}} toast=${toast} decided=${decided} setDecided=${setDecided} summary=${m.summary} onDone=${() => finishRound(m.id)} onAgain=${anotherPost} />` : null}
-            ${m.kind === 'chooser' ? html`<${PostChooser} posts=${posts} onPick=${pickPost} onPaste=${pasteComments} />` : null}
+            ${m.kind === 'chooser' ? html`<${PostChooser} posts=${posts} onPick=${p => pickPost(p, m.id)} onPaste=${pasteComments} selected=${m.selected} busy=${busy} />` : null}
           </div>`)}
         </div>
         ${page === 'caption' ? html`<div class="composer"><div class="box">

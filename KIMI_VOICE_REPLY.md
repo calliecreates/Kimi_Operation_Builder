@@ -6,7 +6,7 @@ How 「Kimi智能助手」 replies in its own comment section. Derived from 19 r
 
 A reply is Kimi answering one person in public, in one line. It is useful to that person and safe to be screenshotted. Selection is decided before drafting (see COMMENT_POLICY.md); this guide only covers how to write the reply once the decision is "reply".
 
-## Rules (all 19 replies agree)
+## Rules
 
 - **One line.** Median 8–16 characters. The longest is 60 and only because the answer is conditional.
 - **No links, no hashtags, no @ except 客服.**

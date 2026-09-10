@@ -1,15 +1,6 @@
 # Comment Policy · 小红书
 
-Category system and reply selection for Feature 2. Derived from 231 user comments and 19 Kimi replies under four notes (`data/voice/xhs_comments.json`). Every example below is a real comment. Supersedes §3.2.2–3.2.3 of the PRD. Xiaohongshu only; X waits for data.
-
-## What the data says
-
-- Kimi replies to 8% of comments. Selection, not coverage.
-- Likes do not predict a reply. Median likes of replied comments: 0–3. The 208-like and 142-like comments got nothing.
-- Every reply is one line, median 8–16 characters, no links, often mirrors the user's sticker.
-- Replies arrive in a burst within hours of posting.
-
-
+Category system and reply selection for Feature 2. Derived from 231 user comments and 19 Kimi replies under four notes (`data/voice/xhs_comments.json`). Every example below is a real comment. 
 
 ## Categories
 
@@ -46,7 +37,7 @@ Replace the PRD's weighted score with a decision, in this order:
 
 Score stays as a display field for the reviewer; it no longer gates anything.
 
-## Reply voice (from the 19 replies)
+## Reply voice
 
 - One line. Under 30 characters unless a fact needs more; the longest real reply is 60 characters and conditional.
 - No links, no hashtags, no apologies longer than three characters.
@@ -61,22 +52,25 @@ Score stays as a display field for the reviewer; it no longer gates anything.
 
 Agreement with Kimi's real reply / no-reply choice: precision 0.39, recall 0.47 (9 agree, 14 we would reply and Kimi did not, 10 Kimi replied and we would not). Per category:
 
-| Category | n | Kimi replied | We reply |
-|---|---|---|---|
-| 额度 / 算力 / 订阅 | 55 | 1 | 0 |
-| @好友 / 无关 | 49 | 0 | 0 |
-| 产品问答·事实 | 27 | 5 | 5 |
-| 功能建议 | 16 | 0 | 0 |
-| 教程需求 | 15 | 1 | 2 |
-| 正面·有内容 | 14 | 3 | 0 |
-| 正面·短 | 14 | 0 | 0 |
-| 质疑 / 竞品 | 13 | 1 | 0 |
-| 产品问答·怎么用 | 9 | 4 | 6 |
-| 账号 / 付费 | 6 | 3 | 6 |
-| UGC | 4 | 1 | 4 |
-| 风险 | 2 | 0 | 0 |
+
+| Category     | n   | Kimi replied | We reply |
+| ------------ | --- | ------------ | -------- |
+| 额度 / 算力 / 订阅 | 55  | 1            | 0        |
+| @好友 / 无关     | 49  | 0            | 0        |
+| 产品问答·事实      | 27  | 5            | 5        |
+| 功能建议         | 16  | 0            | 0        |
+| 教程需求         | 15  | 1            | 2        |
+| 正面·有内容       | 14  | 3            | 0        |
+| 正面·短         | 14  | 0            | 0        |
+| 质疑 / 竞品      | 13  | 1            | 0        |
+| 产品问答·怎么用     | 9   | 4            | 6        |
+| 账号 / 付费      | 6   | 3            | 6        |
+| UGC          | 4   | 1            | 4        |
+| 风险           | 2   | 0            | 0        |
+
 
 Where the disagreements come from:
+
 - **Facts the note does not contain.** Kimi answered "国际区和中国区会员有什么区别", "生成的是html还是ppt", "gif是kimi画的吗" from internal knowledge. With only the note as FACTS the system correctly sends these to human look with the question summarised. This is the intended loop, and the biggest lever: a small product FAQ as extra FACTS would turn most of these into drafts.
 - **Kimi's choices are sparse, not consistent.** It answered 1 of 15 tutorial requests, 3 of 14 rich praise (all on one post), 1 of 6 account issues by routing. A policy cannot reproduce which one; it can reproduce the pattern.
 - **One misconception counted as dispute.** "这是html[笑哭R]" was corrected by Kimi; the model labelled it 质疑. Worth a "misconception" hint in the prompt later.
@@ -89,3 +83,4 @@ The 13 categories held: 0 of 231 comments needed a category outside the table, a
 1. Category 7 额度: no individual reply. Counts only.
 2. Category 10 功能建议: archive with a `feature-request` tag. No reply.
 3. Scope is Xiaohongshu only until X comment data exists.
+

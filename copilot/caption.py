@@ -114,6 +114,37 @@ def generate(brief, platform, post_type, n=3, instruction=None, base=None):
     return {'platform': platform, 'type': post_type, 'candidates': cands, 'meta': meta, 'voice_hash': guide['hash']}
 
 
+def brief_only(material, platforms, session=None, progress=None):
+    """Step 1 of the UI flow: extract the brief and suggest a type per platform. No generation."""
+    report = progress or (lambda *a: None)
+    report('brief', 'start', '提取简介')
+    brief, suggestions, meta = extract_brief(material, list(platforms))
+    report('brief', 'done', f"简介：{len(brief['facts'])} 条事实，{len(brief['unknowns'])} 项未知")
+    return {'id': new_id(), 'brief': brief, 'suggestions': suggestions, 'platforms': list(platforms), 'usage': {'brief': meta}}
+
+
+def generate_all(brief, suggestions, types, platforms, n=2, session=None, progress=None):
+    """Step 2: generate for the chosen types. Same record shape as run()."""
+    from . import voice as _v
+    report = progress or (lambda *a: None)
+    t0 = now()
+    chosen = {p: (types or {}).get(p) if (types or {}).get(p) in _v.TYPES[p] else (suggestions.get(p) or {}).get('type') or ('feature_update' if p == 'x' else 'feature_tutorial') for p in platforms}
+
+    def gen(p):
+        report('gen:' + p, 'start', f"生成 {_v.PLATFORM_LABEL[p]} 候选（{_v.TYPES[p][chosen[p]]['label']}）")
+        r = generate(brief, p, chosen[p], n)
+        fails = sum(c['lint']['summary']['fail'] for c in r['candidates'])
+        report('gen:' + p, 'done', f"{_v.PLATFORM_LABEL[p]} 候选：{len(r['candidates'])} 个，checklist {'全部通过' if not fails else str(fails) + ' 项未通过'}")
+        return r
+    with ThreadPoolExecutor(max_workers=len(platforms)) as ex:
+        results = list(ex.map(gen, platforms))
+    out = {'id': new_id(), 'session': session, 'started': t0, 'finished': now(), 'prompt_version': PROMPT_VERSION,
+           'brief': brief, 'suggestions': suggestions, 'types': chosen, 'results': {r['platform']: r for r in results},
+           'usage': {r['platform']: r['meta'] for r in results}}
+    append('caption_runs', {k: v for k, v in out.items() if k != 'brief'} | {'brief': {k: v for k, v in brief.items() if k != 'material'}, 'material_chars': len(brief.get('material', ''))})
+    return out
+
+
 def run(material, platforms=('x', 'xhs'), types=None, n=3, session=None, progress=None):
     """Full pipeline. `types` overrides suggested types per platform. Platforms generate in parallel.
     `progress(stage, status, detail)` is called as stages start and finish."""

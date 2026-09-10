@@ -191,7 +191,3 @@ Kimi K2.6 is now #1 on OpenRouter's weekly LLM Leaderboard 🏆
 
 A huge thank you to every developer building with Kimi. We'll keep our heads down and keep shipping.
 ```
-
-## Not covered by the sample
-
-Chinese-language voice, reply tone, and incident comms beyond one example. Chinese copy needs its own guide.

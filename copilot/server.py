@@ -230,6 +230,26 @@ class Handler(BaseHTTPRequestHandler):
             types = {p: t for p, t in (body.get('types') or {}).items() if p in voice.TYPES and t in voice.TYPES[p]}
             n = max(1, min(3, int(body.get('n', 2))))
             return {'job': start_job('caption', lambda progress: caption.run(material, platforms, types, n, session, progress))}
+        if path == '/api/caption/brief':
+            material = str(body.get('material', '')).strip()
+            if len(material) < 10:
+                raise ValueError('请粘贴至少一句素材。')
+            if len(material) > 8000:
+                raise ValueError('素材过长，请控制在 8000 字以内。')
+            platforms = [p for p in body.get('platforms', ['x', 'xhs']) if p in ('x', 'xhs')] or ['x', 'xhs']
+            return {'job': start_job('brief', lambda progress: caption.brief_only(material, platforms, session, progress))}
+        if path == '/api/caption/generate':
+            brief = body.get('brief'); suggestions = body.get('suggestions') or {}
+            if not isinstance(brief, dict) or not isinstance(brief.get('facts'), list) or not brief['facts']:
+                raise ValueError('简介缺失，请重新提取。')
+            brief = {k: brief.get(k) for k in ('product', 'topic', 'facts', 'links', 'date', 'audience', 'unknowns', 'material')}
+            brief['facts'] = [{'id': str(f.get('id', '')), 'text': str(f.get('text', ''))[:600]} for f in brief['facts'] if isinstance(f, dict)][:20]
+            brief['unknowns'] = [str(u)[:200] for u in (brief.get('unknowns') or [])][:12]
+            brief['material'] = str(brief.get('material') or '')[:8000]
+            platforms = [p for p in body.get('platforms', ['x', 'xhs']) if p in ('x', 'xhs')] or ['x', 'xhs']
+            types = {p: t for p, t in (body.get('types') or {}).items() if p in voice.TYPES and t in voice.TYPES[p]}
+            n = max(1, min(3, int(body.get('n', 2))))
+            return {'job': start_job('caption', lambda progress: caption.generate_all(brief, suggestions, types, platforms, n, session, progress))}
         if path == '/api/caption/refine':
             run = find_run(str(body.get('run_id', '')))
             if not run or 'brief' not in run or 'material' not in run['brief']:

@@ -136,3 +136,9 @@ textarea:focus{outline:2px solid #b9c6f5}
 .tally{display:flex;gap:16px;align-items:center;background:#fff;border-radius:var(--r-sm);padding:10px 14px;margin-top:12px;font-size:13px;position:sticky;bottom:8px;box-shadow:var(--shadow, 0 6px 20px rgba(0,0,0,.06))}
 .tally .sp{flex:1}
 .composer.slim{padding:10px 28px 16px;color:var(--muted);font-size:13px}
+
+.picker-card{gap:12px}
+.pick-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pick-row .chips{margin:0}
+.card.post.selected{outline:2px solid var(--accent-ink)}
+.sent{background:var(--panel);border-radius:var(--r-sm);padding:8px 12px;white-space:pre-wrap}

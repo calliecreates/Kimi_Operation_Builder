@@ -125,7 +125,7 @@ def classify(rows, facts='', progress=None):
         chunk = rows[i:i+30]
         if progress:
             progress('classify', 'start', f'分类 {i+1}–{min(i+30, len(rows))} / {len(rows)} 条')
-        obj, meta = chat_json(CLASSIFY_SYSTEM, {'FACTS': facts or '(none)', 'comments': [{'id': r['id'], 'text': r['text']} for r in chunk]}, max_tokens=4000, timeout=240)
+        obj, meta = chat_json(CLASSIFY_SYSTEM, {'FACTS': facts or '(none)', 'comments': [{'id': r['id'], 'text': r['text']} for r in chunk]}, max_tokens=4000, timeout=240, temperature=0.3)
         metas.append(meta)
         for it in obj.get('items', []):
             if isinstance(it, dict) and it.get('id'):

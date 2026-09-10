@@ -42,6 +42,7 @@ All functionality is real: Kimi API, TwitterAPI.io, outbound webhooks. No replay
 
 ## Log
 
+- 09-11 UI v3 after second review: type is confirmed before generation (brief job → type picker card → generate job; the picker stays for changing type); comment 发送 locks the card as 已发送, human-look cards get an empty reply box; post chooser persists with 已选. Buttons unified: 发送 / 采纳. Classification pinned to temperature 0.3.
 - 09-11 UI v2 after owner review: 生成文案 / 处理评论 as the two primary pages; live stage progress (提取简介 → 类型 → 各平台候选 → checklist) from job stages; material collapsed; brief with numbered facts visible; platform tabs; type bar with 重新生成; XHS title / body / tags split; placeholder list per card. Comments became a guided flow (owner's choice): 选帖子 (four real notes) → 筛选与起草 with live stages → 逐条决定 (确认回复 / 编辑后回复 / 跳过 / 升级) → tally → 本轮小结. Cards show 官号当时回复了 where the data has a real reply. Paste stays as a fold.
 - 09-11 Server + chat UI built and tested locally end to end (caption run, adopt, comments run). Pushed to GitHub; Railway project created; first two builds failed on Python detection, fixed with requirements.txt.
 - 09-11 Comment replay on 231 real comments: precision 0.39 / recall 0.47 vs Kimi's own reply choices; 13 categories covered every comment; biggest lever is a product FAQ as extra FACTS (see COMMENT_POLICY.md Evaluation).
