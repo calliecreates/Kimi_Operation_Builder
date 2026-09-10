@@ -4,6 +4,8 @@ Category system and reply selection for Feature 2. Derived from 231 user comment
 
 ## Categories
 
+Twelve categories.
+
 
 | #   | Category         | Signal                                                        | Default action                                                                                         | Real example → Kimi's reply                       |
 | --- | ---------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------- |
@@ -22,18 +24,18 @@ Category system and reply selection for Feature 2. Derived from 231 user comment
 | 13  | **风险**           | concrete legal, privacy or safety claim, without joke markers | **Never draft. Human look.** Escalate only if the claim is specific.                                   | "干律师，敢把保密协议上传到网上也是神人" → human look                |
 
 
-Hyperbole is not risk: "要被集体诉讼了[笑哭R]" and "我要发帖投诉你们[飞吻R]" are category 7 with a sticker. A keyword hit plus a joke sticker or 额度 vocabulary routes to category 7 with a "human look" flag, not to 13.
+Hyperbole is not risk: "要被集体诉讼了[笑哭R]" and "我要发帖投诉你们[飞吻R]" are category 6 with a sticker. A keyword hit plus a joke sticker or 额度 vocabulary routes to category 6 with a "human look" flag, not to 12.
 
 ## Selection
 
 Replace the PRD's weighted score with a decision, in this order:
 
-1. Category 13 → human look, no draft.
-2. Category 7, 8, 10, 11, 12 → no draft. Show counts, not cards.
+1. Category 12 → human look, no draft.
+2. Category 7, 9, 10, 11 → no draft. Show counts, not cards. Category 6 → human look, no draft.
 3. Category 5 → draft the routing line only.
-4. Category 1, 2, 4 → draft if **answerable from FACTS** (1, 2) or by the UGC pattern (4). Category 3 → one draft per post. Category 9 → optional, no auto draft. Not answerable → "human look" with the question summarised.
+4. Category 1, 2, 4 → draft if **answerable from FACTS** (1, 2) or by the UGC pattern (4). Category 3 → one draft per post. Category 8 → optional, no auto draft. Not answerable → "human look" with the question summarised.
 5. Duplicates: same question asked more than once → draft for the first, mark the rest "apply reply".
-6. Order cards by category (4, 1, 2, 3, 5, 9, 6) then by time. Likes are shown, not used.
+6. Order cards by category (4, 1, 2, 3, 5, 8, 6) then by time. Likes are shown, not used.
 
 Score stays as a display field for the reviewer; it no longer gates anything.
 

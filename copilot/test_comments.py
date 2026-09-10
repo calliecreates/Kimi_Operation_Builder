@@ -17,20 +17,23 @@ class Guard(unittest.TestCase):
         cat, flags = self.g('训练数据没有授权吧，已经联系律师了', 'dispute')
         self.assertEqual(cat, 'risk')
 
-    def test_hyperbole_with_sticker_is_quota_not_risk(self):
+    def test_hyperbole_with_sticker_is_negative_not_risk(self):
         cat, flags = self.g('额度问题再不解决要被用户集体诉讼了[笑哭R]', 'product_negative')
-        self.assertEqual(cat, 'quota')
+        self.assertEqual(cat, 'product_negative')
         self.assertIn('human-look', flags)
 
     def test_complaint_threat_with_joke_sticker(self):
         cat, flags = self.g('一个 agent 任务把 99会员的全部额度一下用完。我要发帖投诉你们[飞吻R]', 'risk')
-        self.assertEqual(cat, 'quota')
+        self.assertEqual(cat, 'product_negative')
 
     def test_mention_only_is_spam(self):
         self.assertEqual(self.g('@水星领航员', 'praise_short')[0], 'mention_spam')
 
-    def test_negative_about_quota_is_quota(self):
-        self.assertEqual(self.g('每次用都说人数太多，排队排不上会员', 'product_negative')[0], 'quota')
+    def test_quota_complaint_is_negative_with_topic_tag(self):
+        cat, flags = self.g('每次用都说人数太多，排队排不上会员', 'product_negative')
+        self.assertEqual(cat, 'product_negative')
+        self.assertIn('topic:quota', flags)
+        self.assertEqual(self.g('每次用都说人数太多，排队排不上会员', 'quota')[0], 'product_negative')
 
 
 class Decide(unittest.TestCase):
@@ -39,7 +42,8 @@ class Decide(unittest.TestCase):
         return [dict(base, id='c1', text='这是html还是ppt', category='fact_qa'),
                 dict(base, id='c2', text='怎么用', category='howto_qa', dup_group='howto'),
                 dict(base, id='c3', text='这个怎么用啊', category='howto_qa', dup_group='howto'),
-                dict(base, id='c4', text='什么时候能不429', category='quota'),
+                dict(base, id='c4', text='什么时候能不429', category='product_negative', flags=['topic:quota']),
+                dict(base, id='c12', text='导出字体丢了', category='product_negative'),
                 dict(base, id='c5', text='希望增加北大法宝', category='feature_request'),
                 dict(base, id='c6', text='退款没到', category='account'),
                 dict(base, id='c7', text='需要哪种订阅才能用ppt', category='fact_qa', answerable=False),
@@ -54,7 +58,9 @@ class Decide(unittest.TestCase):
         self.assertEqual(rows['c2']['action'], 'draft')
         self.assertEqual(rows['c3']['action'], 'apply')
         self.assertEqual(rows['c3']['apply_from'], 'c2')
-        self.assertEqual(rows['c4']['action'], 'none')
+        self.assertEqual(rows['c4']['action'], 'none')   # quota topic: counted only
+        self.assertEqual(rows['c4']['tag'], 'quota')
+        self.assertEqual(rows['c12']['action'], 'look')  # other negatives: human look
         self.assertEqual(rows['c5']['action'], 'archive')
         self.assertEqual(rows['c5']['tag'], 'feature-request')
         self.assertEqual(rows['c6']['action'], 'route')

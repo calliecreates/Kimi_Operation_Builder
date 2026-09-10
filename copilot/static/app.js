@@ -129,7 +129,7 @@ function CaptionResult({ msg, types, onRefine, onChangeType, toast, decided, set
 
 /* ---------- comments: guided flow ---------- */
 const ACT = { draft: ['起草', 'blue'], route: ['转客服', 'blue'], apply: ['套用相似', 'blue'], optional: ['可回', 'amber'], look: ['人工看', 'amber'], none: ['不回', ''], archive: ['归档', ''] };
-const FLAG = f => f.replace('risk-words:', '风险词：').replace('human-look', '人工看').replace('not-answerable', '简介答不了').replace('model-declined', '模型退回');
+const FLAG = f => f.replace('risk-words:', '风险词：').replace('human-look', '人工看').replace('not-answerable', '简介答不了').replace('model-declined', '模型退回').replace('topic:quota', '话题：额度');
 const DEC = { adopt: '已发送', edit: '已发送', skip: '已跳过', escalate: '已升级' };
 function PostChooser({ posts, onPick, onPaste, selected, busy }) {
   const [open, setOpen] = useState(false); const [text, setText] = useState(''); const [facts, setFacts] = useState('');
@@ -174,15 +174,15 @@ function CommentsResult({ run, cats, toast, decided, setDecided, onDone, onAgain
   const rows = run.rows; const s = run.summary;
   const grp = a => rows.filter(r => a.includes(r.action));
   const todo = grp(['draft', 'route', 'apply']), look = grp(['look']), opt = grp(['optional']), none = grp(['none']), arch = grp(['archive']);
-  const counts = Object.entries(s.categories).filter(([, n]) => n).sort((a, b) => b[1] - a[1]);
+  const counts = Object.entries(s.categories).filter(([k, n]) => n && k !== 'quota_topic').sort((a, b) => b[1] - a[1]);
   const pending = [...todo, ...look].filter(r => !decided[r.id]).length;
   const tally = ['adopt', 'edit', 'skip', 'escalate'].map(a => [a, [...todo, ...look, ...opt].filter(r => decided[r.id] === a).length]);
   return html`<div>
     <div class="bubble">第二步：${s.total} 条评论里，值得回复的 ${todo.length} 条已起草，${look.length} 条需要人看；${none.length} 条不回，${arch.length} 条归档。</div>
-    <div class="chips">${counts.map(([k, n]) => html`<span class=${'chip small' + (k === 'risk' ? ' on' : '')}>${cats[k]?.label || k} ${n}</span>`)}</div>
+    <div class="chips">${counts.map(([k, n]) => html`<span class=${'chip small' + (k === 'risk' ? ' on' : '')}>${cats[k]?.label || k} ${n}</span>`)}${s.categories.quota_topic ? html`<span class="chip small">其中额度话题 ${s.categories.quota_topic}</span>` : null}</div>
     ${todo.length + look.length ? html`<div class="section-title">第三步：逐条决定</div><div class="grid">${[...todo, ...look].map(r => html`<${CommentCard} key=${r.id} row=${r} runId=${run.id} toast=${toast} decided=${decided} setDecided=${setDecided} />`)}</div>` : null}
     ${opt.length ? html`<details class="fold"><summary>可回，人工决定 ${opt.length}</summary><div class="grid">${opt.map(r => html`<${CommentCard} key=${r.id} row=${r} runId=${run.id} toast=${toast} decided=${decided} setDecided=${setDecided} />`)}</div></details>` : null}
-    ${none.length ? html`<details class="fold"><summary>无需回复 ${none.length}（额度、短评、质疑）</summary><div class="list">${none.map(r => html`<div class="row"><span class="who">${r.label}</span><span>${r.text}</span></div>`)}</div></details>` : null}
+    ${none.length ? html`<details class="fold"><summary>无需回复 ${none.length}（额度话题、短评、质疑）</summary><div class="list">${none.map(r => html`<div class="row"><span class="who">${r.tag === 'quota' ? '额度话题' : r.label}</span><span>${r.text}</span></div>`)}</div></details>` : null}
     ${arch.length ? html`<details class="fold"><summary>已归档 ${arch.length}${arch.some(r => r.tag) ? `，标签 ${[...new Set(arch.map(r => r.tag).filter(Boolean))].join(' / ')}` : ''}</summary><div class="list">${arch.map(r => html`<div class="row"><span class="who">${r.tag ? '#' + r.tag : r.label}</span><span>${r.text}</span></div>`)}</div></details>` : null}
     <div class="tally"><span>已发送 ${tally[0][1] + tally[1][1]}</span><span>跳过 ${tally[2][1]}</span><span>升级 ${tally[3][1]}</span><span>待定 ${pending}</span><span class="sp"></span>
       ${summary ? html`<button class="btn" onClick=${onAgain}>再选一篇</button>` : html`<button class="btn dark" onClick=${onDone}>${pending ? `完成本轮（还有 ${pending} 条待定）` : '完成本轮'}</button>`}</div>

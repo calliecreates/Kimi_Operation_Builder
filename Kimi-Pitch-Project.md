@@ -42,6 +42,7 @@ All functionality is real: Kimi API, TwitterAPI.io, outbound webhooks. No replay
 
 ## Log
 
+- 09-11 Policy: 额度/算力/订阅 category merged into 产品负面 (owner's call), with a `quota` topic tag from the keyword rule; tagged complaints are counted, not queued. Twelve categories now. Offline replay: human-look cards per post 10 / 22 / 4 / 9 instead of 22 / 40 / 5 / 22 without the tag.
 - 09-11 UI v3.1: 记录 tab removed (metrics stay in /api/state); 语气手册 shows a Chinese header per guide (what / source / how used / version) and section links above the full text; composer smaller and pinned to the viewport bottom.
 - 09-11 UI v3 after second review: type is confirmed before generation (brief job → type picker card → generate job; the picker stays for changing type); comment 发送 locks the card as 已发送, human-look cards get an empty reply box; post chooser persists with 已选. Buttons unified: 发送 / 采纳. Classification temperature: kimi-k3 rejects anything but 1, so the client now forces 1 for K3 models; the low-temperature attempt broke production for a few minutes on 09-11.
 - 09-11 UI v2 after owner review: 生成文案 / 处理评论 as the two primary pages; live stage progress (提取简介 → 类型 → 各平台候选 → checklist) from job stages; material collapsed; brief with numbered facts visible; platform tabs; type bar with 重新生成; XHS title / body / tags split; placeholder list per card. Comments became a guided flow (owner's choice): 选帖子 (four real notes) → 筛选与起草 with live stages → 逐条决定 (确认回复 / 编辑后回复 / 跳过 / 升级) → tally → 本轮小结. Cards show 官号当时回复了 where the data has a real reply. Paste stays as a fold.
