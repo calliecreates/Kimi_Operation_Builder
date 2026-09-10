@@ -191,31 +191,38 @@ function CommentsResult({ run, cats, toast, decided, setDecided, onDone, onAgain
 }
 
 /* ---------- secondary pages ---------- */
-function Records({ state }) {
-  const m = state?.metrics || {}; const pct = v => v == null ? '—' : Math.round(v * 100) + '%';
-  return html`<div class="records">
-    <div class="metrics">
-      <div class="metric"><div class="k">文案采纳率（含编辑）</div><div class="v">${pct(m.caption?.adoption_rate)}</div><div class="s">${m.caption?.decisions || 0} 次决策 · 采纳 ${m.caption?.adopted || 0} · 编辑 ${m.caption?.edited || 0} · 跳过 ${m.caption?.skipped || 0}</div></div>
-      <div class="metric"><div class="k">文案编辑幅度（中位）</div><div class="v">${pct(m.caption?.median_edit_ratio)}</div><div class="s">采纳前改动占原文比例，越小越接近开箱即用</div></div>
-      <div class="metric"><div class="k">回复采纳率</div><div class="v">${pct(m.comment?.adoption_rate)}</div><div class="s">${m.comment?.decisions || 0} 次决策 · 升级 ${m.comment?.escalated || 0}</div></div>
-      <div class="metric"><div class="k">回复编辑幅度（中位）</div><div class="v">${pct(m.comment?.median_edit_ratio)}</div><div class="s">回复规范来自 19 条真实回复</div></div>
-    </div>
-    <div><div class="section-title">最近的文案</div><div class="list">${(state?.recent?.captions || []).map(r => html`<div class="row"><span class="who">${(r.ts || '').slice(5, 16).replace('T', ' ')}</span><span>${r.topic || '（无主题）'} · ${(r.platforms || []).map(p => PLAT[p]).join(' / ')}</span></div>`)}</div></div>
-    <div><div class="section-title">最近的评论处理</div><div class="list">${(state?.recent?.comments || []).map(r => html`<div class="row"><span class="who">${(r.ts || '').slice(5, 16).replace('T', ' ')}</span><span>${r.summary?.total} 条 · 起草 ${r.summary?.actions?.draft ?? r.summary?.drafts} · 人工看 ${r.summary?.actions?.look ?? '—'}</span></div>`)}</div></div>
-    <div class="small">语气文件版本：X ${state?.voice?.x?.hash} · 小红书 ${state?.voice?.xhs?.hash} · prompt ${state?.prompt_versions?.caption} / ${state?.prompt_versions?.comments} · 模型 ${state?.model}</div>
-  </div>`;
-}
-function Voice() {
+function Voice({ state }) {
   const [which, setWhich] = useState('x'); const [md, setMd] = useState('');
-  useEffect(() => { api('/api/voice/' + which).then(r => setMd(r.markdown)).catch(e => setMd('加载失败：' + e.message)); }, [which]);
-  const names = { x: 'X 发帖', xhs: '小红书发帖', reply: '小红书回复', policy: '评论策略' };
-  return html`<div class="records"><div class="chips">${Object.entries(names).map(([k, v]) => html`<button class=${'chip' + (k === which ? ' on' : '')} onClick=${() => setWhich(k)}>${v}</button>`)}</div>
-    <div class="md" dangerouslySetInnerHTML=${{ __html: mdToHtml(md) }}></div></div>`;
+  useEffect(() => { setMd(''); api('/api/voice/' + which).then(r => setMd(r.markdown)).catch(e => setMd('加载失败：' + e.message)); }, [which]);
+  const GUIDES = {
+    x: { name: 'X 发帖', title: 'KIMI_VOICE.md', what: '@Kimi_Moonshot 在 X 上怎么写：品牌角色、语气、六种帖子模板、用词和数字规则、格式、对错示例、审核清单、真实帖子作为 few-shot。',
+         source: '2026 年 1–9 月的 100 条真实帖子，统计 + 通读归纳，再用 Kimi K3 独立提炼一遍做交叉核对。', use: '生成 X 文案时整份文件进入 system prompt；清单中可机读的项由代码执行为 checklist。', hash: state?.voice?.x?.hash },
+    xhs: { name: '小红书发帖', title: 'KIMI_VOICE_XHS.md', what: '「Kimi智能助手」在小红书怎么写：三种语域（日常营业 / 正式发布 / 声明致歉）、标题规则、正文模板、tags、对错示例、审核清单、真实笔记 few-shot。',
+           source: '2026 年 2–9 月的 100 条真实笔记，同样做了模型交叉核对。', use: '生成小红书笔记时整份文件进入 system prompt；标题长度、贴纸、tags、中英文空格等由代码检查。', hash: state?.voice?.xhs?.hash },
+    reply: { name: '小红书回复', title: 'KIMI_VOICE_REPLY.md', what: '评论区怎么回：一行、无链接、本K 口吻、按评论类别的句式、什么时候镜像贴纸。',
+             source: '四篇真实笔记下官号的 19 条真实回复。样本小，所有回复都标注来源，规则分为「全部一致」和「倾向」。', use: '只在决定要回的评论上起草时进入 prompt；长度、链接、贴纸、竞品由代码检查。' },
+    policy: { name: '评论策略', title: 'COMMENT_POLICY.md', what: '评论分 13 类，每类默认动作；回不回是决策表，不是打分；风险的夸张守卫；对 231 条真实评论的回放评测结果。',
+              source: '四篇笔记下的 231 条用户评论和官号的实际选择。', use: '类别定义进入分类 prompt；决策表、守卫、去重全部在代码里执行。' },
+  };
+  const g = GUIDES[which];
+  const sections = md.split('\n').filter(l => l.startsWith('## ')).map(l => l.slice(3));
+  const htmlOut = mdToHtml(md).replace(/<h2>(.*?)<\/h2>/g, (m, t) => `<h2 id="sec-${encodeURIComponent(t.replace(/<[^>]+>/g, ''))}">${t}</h2>`);
+  return html`<div class="records">
+    <div class="chips">${Object.entries(GUIDES).map(([k, v]) => html`<button class=${'chip' + (k === which ? ' on' : '')} onClick=${() => setWhich(k)}>${v.name}</button>`)}</div>
+    <div class="card guide-head">
+      <div class="head"><span class="title">${g.name}</span><span class="tag">${g.title}</span>${g.hash ? html`<span class="tag">版本 ${g.hash}</span>` : null}</div>
+      <div class="kv"><span class="k">是什么</span><span>${g.what}</span></div>
+      <div class="kv"><span class="k">来源</span><span>${g.source}</span></div>
+      <div class="kv"><span class="k">怎么用</span><span>${g.use}</span></div>
+      ${sections.length ? html`<div class="kv"><span class="k">章节</span><span class="chips">${sections.map(t => html`<a class="chip small" href=${'#sec-' + encodeURIComponent(t)}>${t}</a>`)}</span></div>` : null}
+      <div class="small">原文为英文，是系统实际加载的版本；下面是全文。</div>
+    </div>
+    <div class="md" dangerouslySetInnerHTML=${{ __html: htmlOut }}></div></div>`;
 }
 
 /* ---------- app ---------- */
 function App() {
-  const [page, setPage] = useState($store.get('cc.page', 'caption'));
+  const [page, setPage] = useState(['caption', 'comments', 'voice'].includes($store.get('cc.page', 'caption')) ? $store.get('cc.page', 'caption') : 'caption');
   const [state, setState] = useState(null);
   const [msgs, setMsgs] = useState(() => $store.get('cc.msgs2', { caption: [], comments: [] }));
   const [platforms, setPlatforms] = useState(['x', 'xhs']);
@@ -310,14 +317,14 @@ function App() {
     push('caption', { role: 'bot', kind: 'picker-again', status: 'done', pickerId });
   }
   const typeOptions = state ? Object.fromEntries(Object.entries(state.voice).map(([p, v]) => [p, v.types])) : null;
-  const nav = [['caption', '生成文案'], ['comments', '处理评论'], ['records', '记录'], ['voice', '语气手册']];
+  const nav = [['caption', '生成文案'], ['comments', '处理评论'], ['voice', '语气手册']];
   const isSkill = page === 'caption' || page === 'comments';
   return html`<div class="shell">
     <aside class="rail"><div class="logo">K</div>
       ${nav.map(([k, v], i) => html`<button class=${(k === page ? 'on' : '') + (i < 2 ? ' primary' : '')} onClick=${() => setPage(k)}>${v}</button>`)}
       <div class="spacer"></div>${isSkill ? html`<button title="清空当前对话" onClick=${() => { if (confirm('清空当前对话？记录不会删除。')) setMsgs(ms => ({ ...ms, [page]: page === 'comments' ? [{ id: uid(), role: 'bot', kind: 'chooser', status: 'done' }] : [] })); }}>清空</button>` : null}</aside>
     <main class="main">
-      <div class="top"><h1>${{ caption: '生成文案', comments: '处理评论', records: '记录', voice: '语气手册' }[page]}</h1>
+      <div class="top"><h1>${{ caption: '生成文案', comments: '处理评论', voice: '语气手册' }[page]}</h1>
         ${page === 'caption' ? html`<span class="sub">素材 → 简介 → 按 Kimi 语气生成 → checklist</span>` : page === 'comments' ? html`<span class="sub">分类 → 守卫 → 决策表 → 只对要回的起草 · 小红书</span>` : null}
         <span class="meta">${state ? (state.kimi_configured ? `模型 ${state.model}` : 'Kimi API 未配置') : '连接中…'}</span></div>
       ${isSkill ? html`
@@ -339,7 +346,7 @@ function App() {
           <div class="bar">
             ${[['x'], ['xhs'], ['x', 'xhs']].map(ps => html`<button class=${'chip' + (ps.join() === platforms.join() ? ' on' : '')} onClick=${() => setPlatforms(ps)}>${ps.length === 2 ? '双平台' : PLAT[ps[0]]}</button>`)}
             <button class="btn dark send" disabled=${busy || !(input.caption || '').trim()} onClick=${send}>${busy ? '处理中…' : '生成'} ⌘↵</button>
-          </div></div></div>` : html`<div class="composer slim">${busy ? '处理中…' : list.length ? html`<button class="btn ghost" onClick=${anotherPost}>再选一篇帖子</button>` : ''}</div>`}` : page === 'records' ? html`<${Records} state=${state} />` : html`<${Voice} />`}
+          </div></div></div>` : html`<div class="composer slim">${busy ? '处理中…' : list.length ? html`<button class="btn ghost" onClick=${anotherPost}>再选一篇帖子</button>` : ''}</div>`}` : html`<${Voice} state=${state} />`}
     </main>
     <${Toast} msg=${toastMsg} />
   </div>`;
