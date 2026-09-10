@@ -18,6 +18,7 @@ from . import caption, comments, voice
 from .llm import LLMError, credentials
 from .store import append, new_id, now, read
 
+
 ROOT = Path(__file__).resolve().parent
 STATIC = ROOT / 'static'
 LOCK = threading.RLock()
@@ -26,6 +27,37 @@ RUNS = {}        # run_id -> full caption run (needed for refine); comment runs 
 RATE = defaultdict(deque)
 RATE_LIMIT = (int(os.environ.get('RATE_PER_MIN', '12')), int(os.environ.get('RATE_PER_DAY', '150')))
 MAX_JOBS_RUNNING = 4
+
+import json as _json
+
+POSTS_FILE = ROOT.parent / 'data' / 'voice' / 'xhs_comments.json'
+NOTES_FILE = ROOT.parent / 'data' / 'voice' / 'xhs_posts.json'
+# the export named after the 金融投研 note actually holds the Harvey legal note's comments
+POST_ALIAS = {'进阶教程第二期：金融投研来试试Kimi Work': 'Harvey发布：基于Kimi K3的首个法律行业模型'}
+
+
+def load_posts():
+    """Real Xiaohongshu posts with their comment threads, for the guided flow."""
+    if not POSTS_FILE.exists():
+        return []
+    data = _json.loads(POSTS_FILE.read_text(encoding='utf-8'))
+    notes = {n['title']: n for n in _json.loads(NOTES_FILE.read_text(encoding='utf-8'))['posts']} if NOTES_FILE.exists() else {}
+    posts = {}
+    for r in data['rows']:
+        title = POST_ALIAS.get(r['post'], r['post'])
+        p = posts.setdefault(title, {'id': str(len(posts) + 1), 'title': title, 'rows': [], 'replied': 0})
+        if r['type'] == '主评论' and not r['is_kimi']:
+            p['rows'].append({'id': f"c{len(p['rows'])+1}", 'author': r['nick'], 'text': r['text'], 'likes': r['likes'], 'kimi_replied': r['kimi_replied'], 'time': r['time']})
+            p['replied'] += bool(r['kimi_replied'])
+    out = []
+    for p in posts.values():
+        note = notes.get(p['title'])
+        p['date'] = (note or {}).get('date', '')[:10] or (p['rows'][0]['time'][:10] if p['rows'] else '')
+        p['facts'] = f"标题：{p['title']}\n{note['body']}" if note else p['title']
+        p['likes'] = (note or {}).get('likes')
+        p['count'] = len(p['rows'])
+        out.append(p)
+    return out
 
 
 def rate_ok(ip):
@@ -138,6 +170,8 @@ class Handler(BaseHTTPRequestHandler):
         if path.startswith('/api/job/'):
             job = JOBS.get(path.rsplit('/', 1)[-1])
             return self.send_json(200 if job else 404, job or {'error': '任务不存在'})
+        if path == '/api/posts':
+            return self.send_json(200, {'posts': [{k: v for k, v in p.items() if k not in ('rows', 'facts')} for p in load_posts()]})
         if path.startswith('/api/voice/'):
             name = path.rsplit('/', 1)[-1]
             files = {'x': 'KIMI_VOICE.md', 'xhs': 'KIMI_VOICE_XHS.md', 'reply': 'KIMI_VOICE_REPLY.md', 'policy': 'COMMENT_POLICY.md'}
@@ -205,6 +239,12 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError('缺少平台、候选或修改说明。')
             return {'job': start_job('refine', lambda progress: (progress('refine', 'start', '按说明生成修改版'), dict(caption.refine(run, platform, cid, instr, session), id=new_id(), run_id=run['id']))[1])}
         if path == '/api/comments/run':
+            if body.get('post_id'):
+                post = next((p for p in load_posts() if p['id'] == str(body['post_id'])), None)
+                if not post:
+                    raise ValueError('帖子不存在。')
+                rows = [dict(r) for r in post['rows']]
+                return {'job': start_job('comments', lambda progress: dict(comments.run('', post['facts'], session, rows=rows, progress=progress), post={'id': post['id'], 'title': post['title']}))}
             text = str(body.get('text', '')).strip()
             if not text:
                 raise ValueError('请粘贴评论。')

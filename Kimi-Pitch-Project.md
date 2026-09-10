@@ -42,6 +42,7 @@ All functionality is real: Kimi API, TwitterAPI.io, outbound webhooks. No replay
 
 ## Log
 
+- 09-11 UI v2 after owner review: 生成文案 / 处理评论 as the two primary pages; live stage progress (提取简介 → 类型 → 各平台候选 → checklist) from job stages; material collapsed; brief with numbered facts visible; platform tabs; type bar with 重新生成; XHS title / body / tags split; placeholder list per card. Comments became a guided flow (owner's choice): 选帖子 (four real notes) → 筛选与起草 with live stages → 逐条决定 (确认回复 / 编辑后回复 / 跳过 / 升级) → tally → 本轮小结. Cards show 官号当时回复了 where the data has a real reply. Paste stays as a fold.
 - 09-11 Server + chat UI built and tested locally end to end (caption run, adopt, comments run). Pushed to GitHub; Railway project created; first two builds failed on Python detection, fixed with requirements.txt.
 - 09-11 Comment replay on 231 real comments: precision 0.39 / recall 0.47 vs Kimi's own reply choices; 13 categories covered every comment; biggest lever is a product FAQ as extra FACTS (see COMMENT_POLICY.md Evaluation).
 - 09-10 Step 2 backend: first real run 60 s end to end (brief 28 s, X 19 s, XHS 32 s in parallel); zero lint failures, placeholders used instead of invented links. Fixed: X prompt must say English; blank-line instruction caused malformed JSON. PRD's 30 s target needs a faster model for brief extraction or skipping it when the operator gives structured facts.
