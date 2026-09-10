@@ -45,11 +45,21 @@ def start_job(kind, fn):
         if sum(j['status'] == 'running' for j in JOBS.values()) >= MAX_JOBS_RUNNING:
             raise ValueError('服务繁忙，请稍后再试。')
         job_id = new_id(5)
-        JOBS[job_id] = {'id': job_id, 'kind': kind, 'status': 'running', 'started': now(), 'result': None, 'error': None}
+        JOBS[job_id] = {'id': job_id, 'kind': kind, 'status': 'running', 'started': now(), 'result': None, 'error': None, 'stages': []}
+
+    def progress(stage, status, detail=''):
+        with LOCK:
+            stages = JOBS[job_id]['stages']
+            for st in stages:
+                if st['stage'] == stage:
+                    st.update(status=status, detail=detail or st['detail'], t=time.time())
+                    break
+            else:
+                stages.append({'stage': stage, 'status': status, 'detail': detail, 't': time.time()})
 
     def worker():
         try:
-            result = fn()
+            result = fn(progress)
             with LOCK:
                 RUNS[result['id']] = result
                 JOBS[job_id].update(status='done', result=result)
@@ -185,7 +195,7 @@ class Handler(BaseHTTPRequestHandler):
             platforms = [p for p in body.get('platforms', ['x', 'xhs']) if p in ('x', 'xhs')] or ['x', 'xhs']
             types = {p: t for p, t in (body.get('types') or {}).items() if p in voice.TYPES and t in voice.TYPES[p]}
             n = max(1, min(3, int(body.get('n', 2))))
-            return {'job': start_job('caption', lambda: caption.run(material, platforms, types, n, session))}
+            return {'job': start_job('caption', lambda progress: caption.run(material, platforms, types, n, session, progress))}
         if path == '/api/caption/refine':
             run = find_run(str(body.get('run_id', '')))
             if not run or 'brief' not in run or 'material' not in run['brief']:
@@ -193,7 +203,7 @@ class Handler(BaseHTTPRequestHandler):
             platform, cid, instr = body.get('platform'), str(body.get('candidate_id', '')), str(body.get('instruction', '')).strip()[:1000]
             if platform not in run['results'] or not instr:
                 raise ValueError('缺少平台、候选或修改说明。')
-            return {'job': start_job('refine', lambda: dict(caption.refine(run, platform, cid, instr, session), id=new_id(), run_id=run['id']))}
+            return {'job': start_job('refine', lambda progress: (progress('refine', 'start', '按说明生成修改版'), dict(caption.refine(run, platform, cid, instr, session), id=new_id(), run_id=run['id']))[1])}
         if path == '/api/comments/run':
             text = str(body.get('text', '')).strip()
             if not text:
@@ -201,7 +211,7 @@ class Handler(BaseHTTPRequestHandler):
             if len(text) > 60000:
                 raise ValueError('评论过多，请分批粘贴（一次不超过 300 条）。')
             facts = str(body.get('facts', ''))[:6000]
-            return {'job': start_job('comments', lambda: comments.run(text, facts, session))}
+            return {'job': start_job('comments', lambda progress: comments.run(text, facts, session, progress=progress))}
         if path == '/api/decision':
             kind = body.get('kind')
             action = body.get('action')

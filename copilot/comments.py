@@ -119,10 +119,12 @@ def guard(row):
     return cat, flags
 
 
-def classify(rows, facts=''):
+def classify(rows, facts='', progress=None):
     out, metas = {}, []
     for i in range(0, len(rows), 30):
         chunk = rows[i:i+30]
+        if progress:
+            progress('classify', 'start', f'分类 {i+1}–{min(i+30, len(rows))} / {len(rows)} 条')
         obj, meta = chat_json(CLASSIFY_SYSTEM, {'FACTS': facts or '(none)', 'comments': [{'id': r['id'], 'text': r['text']} for r in chunk]}, max_tokens=4000, timeout=240)
         metas.append(meta)
         for it in obj.get('items', []):
@@ -182,11 +184,13 @@ def lint_reply(reply, comment_text):
     return {'checks': [{'id': k, 'pass': v} for k, v in checks], 'pass': all(v for _, v in checks)}
 
 
-def draft(rows, facts=''):
+def draft(rows, facts='', progress=None):
     targets = [r for r in rows if r['action'] in ('draft', 'route')]
     metas = []
     if not targets:
         return rows, metas
+    if progress:
+        progress('draft', 'start', f'为 {len(targets)} 条起草回复')
     system = DRAFT_SYSTEM.replace('{guide}', REPLY_GUIDE.read_text(encoding='utf-8'))
     for i in range(0, len(targets), 20):
         chunk = targets[i:i+20]
@@ -216,14 +220,20 @@ def summarize(rows):
     return {'total': len(rows), 'categories': cats, 'actions': acts, 'drafts': sum('draft' in r for r in rows)}
 
 
-def run(text, facts='', session=None, rows=None):
+def run(text, facts='', session=None, rows=None, progress=None):
+    report = progress or (lambda *a: None)
     t0 = now()
     rows = rows if rows is not None else parse(text)
     if not rows:
         raise ValueError('没有解析到评论。每行一条，格式如「@用户：内容 (赞 12)」。')
-    rows, m1 = classify(rows, facts)
+    report('parse', 'done', f'解析 {len(rows)} 条评论')
+    rows, m1 = classify(rows, facts, report)
+    report('classify', 'done', '分类完成')
     rows = decide(rows)
-    rows, m2 = draft(rows, facts)
+    acts = {a: sum(r['action'] == a for r in rows) for a in ('draft', 'route', 'look')}
+    report('decide', 'done', f"决策：起草 {acts['draft']}，转客服 {acts['route']}，人工看 {acts['look']}")
+    rows, m2 = draft(rows, facts, report)
+    report('draft', 'done', f"{sum('draft' in r for r in rows)} 条草稿")
     out = {'id': new_id(), 'session': session, 'platform': 'xhs', 'started': t0, 'finished': now(), 'prompt_version': PROMPT_VERSION,
            'rows': rows, 'summary': summarize(rows), 'usage': {'classify': m1, 'draft': m2}}
     append('comment_runs', out)
