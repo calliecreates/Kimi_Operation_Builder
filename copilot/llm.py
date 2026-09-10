@@ -67,6 +67,7 @@ def chat_json(system, user, *, max_tokens=6000, timeout=180, temperature=1.0, at
                'max_tokens': max_tokens, 'temperature': temperature, 'response_format': {'type': 'json_object'}}
     if model.startswith('kimi-k3'):
         payload['reasoning_effort'] = 'low'
+        payload['temperature'] = 1.0  # the K3 API rejects any other value
     last = None
     for attempt in range(attempts):
         t0 = time.time()
